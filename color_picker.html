@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Color Picker</title>
+    <style>
+        body {
+            background-color: black;
+            color: lime;
+            font-family: monospace;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        .ascii-button {
+            display: inline-block;
+            padding: 15px 25px;
+            border: 2px solid lime;
+            background: black;
+            color: lime;
+            font-family: monospace;
+            cursor: pointer;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .ascii-button:hover {
+            background: lime;
+            color: black;
+        }
+        input[type="color"] {
+            visibility: hidden; /* Hide the default color picker */
+            position: absolute;
+        }
+        .ascii-box {
+            display: inline-block;
+            width: 300px;
+            height: 150px;
+            background-color: lime;
+            color: black;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid lime;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASCII Color Picker</h1>
+    <label for="colorInput" class="ascii-button">[ Choose Color ]</label>
+    <input type="color" id="colorInput">
+    <div class="ascii-box" id="colorDisplay">Choose Color To Start</div>
+    
+    <script>
+        const colorInput = document.getElementById('colorInput');
+        const colorDisplay = document.getElementById('colorDisplay');
+
+        document.querySelector('.ascii-button').addEventListener('click', () => {
+            colorInput.click(); // Simulates clicking the hidden color input
+        });
+
+        colorInput.addEventListener('input', function() {
+            const selectedColor = this.value;
+            colorDisplay.style.backgroundColor = selectedColor;
+            colorDisplay.textContent = selectedColor.toUpperCase(); // Show hex code in ASCII box
+        });
+    </script>
+</body>
+</html>
