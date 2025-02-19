@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII MP3 Player</title>
+    <style>
+        body {
+            background-color: black;
+            color: lime;
+            font-family: monospace;
+            text-align: center;
+            transform: scale(0.6); /* Zoom out the entire content */
+            transform-origin: top center; /* Keeps the content aligned at the top */
+            overflow: hidden; /* Disable scrolling */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            font-size: 36px; /* Larger title size */
+            margin-bottom: 20px;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Space between buttons */
+            margin-bottom: 20px;
+        }
+        .ascii-button {
+            display: inline-block;
+            padding: 15px 25px; /* Increased size */
+            border: 2px solid lime;
+            background: black;
+            color: lime;
+            font-family: monospace;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        .ascii-button:hover {
+            background: lime;
+            color: black;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        pre {
+            font-size: 24px;
+            line-height: 1.5;
+            height: 50em;
+            overflow: hidden;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASCII MP3 Player</h1>
+    <div class="button-container">
+        <button id="playButton" class="ascii-button">▶ Play</button>
+        <label for="fileInput" class="ascii-button">[ Choose File ]</label>
+        <input type="file" id="fileInput" accept="audio/mp3">
+        <button id="pauseButton" class="ascii-button">⏸ Pause</button>
+    </div>
+    <pre id="visualizer"></pre>
+    
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const visualizer = document.getElementById('visualizer');
+        const playButton = document.getElementById('playButton');
+        const pauseButton = document.getElementById('pauseButton');
+        let audio;
+        let audioContext;
+        let analyser;
+        let source;
+        let isPaused = false;
+
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                if (audio) {
+                    audio.pause();
+                    audio = null;
+                }
+                const objectURL = URL.createObjectURL(file);
+                audio = new Audio(objectURL);
+                audio.play();
+                isPaused = false;
+                setupVisualizer();
+            }
+        });
+
+        playButton.addEventListener('click', function() {
+            if (audio) {
+                audio.play();
+                isPaused = false;
+                if (audioContext && audioContext.state === "suspended") {
+                    audioContext.resume();
+                }
+            }
+        });
+
+        pauseButton.addEventListener('click', function() {
+            if (audio) {
+                if (audio.paused) {
+                    audio.play();
+                    isPaused = false;
+                    if (audioContext && audioContext.state === "suspended") {
+                        audioContext.resume();
+                    }
+                } else {
+                    audio.pause();
+                    isPaused = true;
+                }
+            }
+        });
+
+        function setupVisualizer() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } else {
+                audioContext.resume();
+            }
+
+            if (source) {
+                source.disconnect();
+            }
+            analyser = audioContext.createAnalyser();
+            source = audioContext.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioContext.destination);
+            analyser.fftSize = 128;
+
+            drawVisualizer();
+        }
+
+        function drawVisualizer() {
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function draw() {
+                if (!audio || audio.paused) return; // Stop updating visuals if audio is paused
+                
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                let asciiArt = '';
+                for (let i = 0; i < bufferLength; i += 2) {
+                    let level = Math.floor(dataArray[i] / 8);
+                    let bar = '█'.repeat(level).padEnd(20, ' '); // Restoring original visual height
+                    asciiArt += bar.split('').reverse().join('') + ' | ' + bar + '\n';
+                }
+                visualizer.textContent = asciiArt;
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>
